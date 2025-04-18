@@ -1,0 +1,146 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Caçador de Dragões - Protótipo com Ataque</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    #attackButton {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      padding: 12px 20px;
+      font-size: 18px;
+      background-color: #b22222;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    #dragonHealthBar {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 200px;
+      height: 20px;
+      background-color: #555;
+      border: 2px solid #333;
+      border-radius: 5px;
+    }
+    #dragonHealth {
+      width: 100%;
+      height: 100%;
+      background-color: red;
+      border-radius: 5px;
+    }
+  </style>
+  <script src="https://cdn.babylonjs.com/babylon.js"></script>
+</head>
+<body>
+<canvas id="gameCanvas"></canvas>
+<div id="attackButton">ATACAR</div>
+<div id="dragonHealthBar"><div id="dragonHealth"></div></div>
+
+<script>
+  const canvas = document.getElementById("gameCanvas");
+  const engine = new BABYLON.Engine(canvas, true);
+
+  const createScene = function () {
+    const scene = new BABYLON.Scene(engine);
+
+    const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+    light.intensity = 0.8;
+
+    const camera = new BABYLON.FollowCamera("camera", new BABYLON.Vector3(0, 5, -10), scene);
+    camera.radius = 10;
+    camera.heightOffset = 4;
+    camera.rotationOffset = 180;
+    camera.cameraAcceleration = 0.05;
+    camera.maxCameraSpeed = 10;
+
+    const ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 100, height: 100 }, scene);
+    const groundMat = new BABYLON.StandardMaterial("groundMat", scene);
+    groundMat.diffuseColor = new BABYLON.Color3(0.3, 0.8, 0.3);
+    ground.material = groundMat;
+
+    const player = BABYLON.MeshBuilder.CreateCapsule("player", { height: 2 }, scene);
+    player.position.y = 1;
+    camera.lockedTarget = player;
+
+    const body = BABYLON.MeshBuilder.CreateSphere("dragonBody", { diameter: 2 }, scene);
+    body.position = new BABYLON.Vector3(20, 1, 0);
+
+    const wing1 = BABYLON.MeshBuilder.CreatePlane("wing1", { size: 2 }, scene);
+    wing1.position = new BABYLON.Vector3(20.8, 1.5, 0);
+    wing1.rotation.z = Math.PI / 4;
+
+    const wing2 = BABYLON.MeshBuilder.CreatePlane("wing2", { size: 2 }, scene);
+    wing2.position = new BABYLON.Vector3(19.2, 1.5, 0);
+    wing2.rotation.z = -Math.PI / 4;
+
+    const dragonMat = new BABYLON.StandardMaterial("dragonMat", scene);
+    dragonMat.diffuseColor = new BABYLON.Color3(0.7, 0.1, 0.1);
+    body.material = dragonMat;
+    wing1.material = dragonMat;
+    wing2.material = dragonMat;
+
+    let dragonHealth = 100;
+    const dragonHealthBar = document.getElementById("dragonHealth");
+
+    document.getElementById("attackButton").addEventListener("click", function () {
+      const distance = BABYLON.Vector3.Distance(player.position, body.position);
+      if (distance < 4 && dragonHealth > 0) {
+        dragonHealth -= 10;
+        if (dragonHealth < 0) dragonHealth = 0;
+        dragonHealthBar.style.width = dragonHealth + "%";
+
+        if (dragonHealth === 0) {
+          alert("Você derrotou o dragão!");
+        }
+      }
+    });
+
+    window.addEventListener("keydown", function (event) {
+      switch (event.key) {
+        case "w":
+        case "ArrowUp":
+          player.position.z += 0.5;
+          break;
+        case "s":
+        case "ArrowDown":
+          player.position.z -= 0.5;
+          break;
+        case "a":
+        case "ArrowLeft":
+          player.position.x -= 0.5;
+          break;
+        case "d":
+        case "ArrowRight":
+          player.position.x += 0.5;
+          break;
+      }
+    });
+
+    return scene;
+  };
+
+  const scene = createScene();
+  engine.runRenderLoop(() => scene.render());
+  window.addEventListener("resize", () => engine.resize());
+</script>
+</body>
+</html>

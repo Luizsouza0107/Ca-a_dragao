@@ -1,0 +1,103 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Caçador de Dragões - Protótipo</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+  </style>
+  <script src="https://cdn.babylonjs.com/babylon.js"></script>
+</head>
+<body>
+<canvas id="gameCanvas"></canvas>
+<script>
+  const canvas = document.getElementById("gameCanvas");
+  const engine = new BABYLON.Engine(canvas, true);
+
+  const createScene = function () {
+    const scene = new BABYLON.Scene(engine);
+
+    // Luz
+    const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+    light.intensity = 0.8;
+
+    // Câmera
+    const camera = new BABYLON.FollowCamera("camera", new BABYLON.Vector3(0, 5, -10), scene);
+    camera.radius = 10;
+    camera.heightOffset = 4;
+    camera.rotationOffset = 180;
+    camera.cameraAcceleration = 0.05;
+    camera.maxCameraSpeed = 10;
+
+    // Terreno
+    const ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 100, height: 100 }, scene);
+    const groundMat = new BABYLON.StandardMaterial("groundMat", scene);
+    groundMat.diffuseColor = new BABYLON.Color3(0.3, 0.8, 0.3);
+    ground.material = groundMat;
+
+    // Personagem (capsule temporário)
+    const player = BABYLON.MeshBuilder.CreateCapsule("player", { height: 2 }, scene);
+    player.position.y = 1;
+
+    camera.lockedTarget = player;
+
+    // Entrada da caverna
+    const cave = BABYLON.MeshBuilder.CreateBox("cave", { width: 4, height: 4, depth: 2 }, scene);
+    cave.position = new BABYLON.Vector3(20, 2, 0);
+    const caveMat = new BABYLON.StandardMaterial("caveMat", scene);
+    caveMat.diffuseColor = new BABYLON.Color3(0.3, 0.2, 0.2);
+    cave.material = caveMat;
+
+    // Movimento (toque simples)
+    window.addEventListener("keydown", function (event) {
+      switch (event.key) {
+        case "w":
+        case "ArrowUp":
+          player.position.z += 0.5;
+          break;
+        case "s":
+        case "ArrowDown":
+          player.position.z -= 0.5;
+          break;
+        case "a":
+        case "ArrowLeft":
+          player.position.x -= 0.5;
+          break;
+        case "d":
+        case "ArrowRight":
+          player.position.x += 0.5;
+          break;
+      }
+    });
+
+    // Verificar proximidade com a caverna
+    scene.registerBeforeRender(function () {
+      const distance = BABYLON.Vector3.Distance(player.position, cave.position);
+      if (distance < 4 && !scene._messageShown) {
+        alert("Você encontrou o dragão!");
+        scene._messageShown = true;
+      }
+    });
+
+    return scene;
+  };
+
+  const scene = createScene();
+  engine.runRenderLoop(() => scene.render());
+  window.addEventListener("resize", () => engine.resize());
+</script>
+</body>
+</html>
